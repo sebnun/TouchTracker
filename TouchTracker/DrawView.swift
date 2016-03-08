@@ -93,6 +93,46 @@ class DrawView: UIView, UIGestureRecognizerDelegate {
         return nil
     }
     
+    func deleteLine(sender: AnyObject) {
+        if let index = selectedLineIndex {
+            finishedLines.removeAtIndex(index)
+            selectedLineIndex = nil
+            
+            setNeedsDisplay()
+        }
+    }
+    
+    override func canBecomeFirstResponder() -> Bool {
+        return true
+    }
+    
+    required init?(coder aDecoder: NSCoder) {
+        super.init(coder: aDecoder)
+        
+        let doubleTapRecognizer = UITapGestureRecognizer(target: self, action: "doubleTap:")
+        doubleTapRecognizer.numberOfTapsRequired = 2
+        //to avoid first dot drawn when detecting a double tap
+        doubleTapRecognizer.delaysTouchesBegan = true
+        addGestureRecognizer(doubleTapRecognizer)
+        
+        let tapRecognizer = UITapGestureRecognizer(target: self, action: "tap:")
+        //to avoid catching a possible double tap
+        tapRecognizer.requireGestureRecognizerToFail(doubleTapRecognizer)
+        tapRecognizer.delaysTouchesBegan = true
+        addGestureRecognizer(tapRecognizer)
+        
+        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: "longPress:")
+        addGestureRecognizer(longPressRecognizer)
+        
+        moveRecognizer = UIPanGestureRecognizer(target: self, action: "moveLine:")
+        moveRecognizer.delegate = self
+        moveRecognizer.cancelsTouchesInView = false
+        addGestureRecognizer(moveRecognizer)
+    }
+
+    
+    //MARK: - UIResponder
+    
     override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent?) {
         
         //to see the order of events
@@ -158,37 +198,14 @@ class DrawView: UIView, UIGestureRecognizerDelegate {
         
     }
     
-    override func canBecomeFirstResponder() -> Bool {
-        return true
-    }
     
-    required init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-        
-        let doubleTapRecognizer = UITapGestureRecognizer(target: self, action: "doubleTap:")
-        doubleTapRecognizer.numberOfTapsRequired = 2
-        //to avoid first dot drawn when detecting a double tap
-        doubleTapRecognizer.delaysTouchesBegan = true
-        addGestureRecognizer(doubleTapRecognizer)
-        
-        let tapRecognizer = UITapGestureRecognizer(target: self, action: "tap:")
-        //to avoid catching a possible double tap
-        tapRecognizer.requireGestureRecognizerToFail(doubleTapRecognizer)
-        tapRecognizer.delaysTouchesBegan = true
-        addGestureRecognizer(tapRecognizer)
-        
-        let longPressRecognizer = UILongPressGestureRecognizer(target: self, action: "longPress:")
-        addGestureRecognizer(longPressRecognizer)
-        
-        moveRecognizer = UIPanGestureRecognizer(target: self, action: "moveLine:")
-        moveRecognizer.delegate = self
-        moveRecognizer.cancelsTouchesInView = true
-        addGestureRecognizer(moveRecognizer)
-    }
+    //MARK: - UIGestureRecognizerProtocol
     
     func gestureRecognizer(gestureRecognizer: UIGestureRecognizer, shouldRecognizeSimultaneouslyWithGestureRecognizer otherGestureRecognizer: UIGestureRecognizer) -> Bool {
         return true
     }
+    
+    //MARK: - Gesture Recognizer Implementations
     
     func doubleTap(gestureRecognizer: UIGestureRecognizer) {
         
@@ -262,12 +279,4 @@ class DrawView: UIView, UIGestureRecognizerDelegate {
         }
     }
     
-    func deleteLine(sender: AnyObject) {
-        if let index = selectedLineIndex {
-            finishedLines.removeAtIndex(index)
-            selectedLineIndex = nil
-            
-            setNeedsDisplay()
-        }
-    }
 }
